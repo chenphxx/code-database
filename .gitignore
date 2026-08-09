@@ -1,4 +1,18 @@
-# 忽略build文件夹
+# Node.js
+node_modules/
+dist/
+
+# Rust / Tauri 构建产物
+src-tauri/target/
+src-tauri/gen/schemas/
+src-tauri/icons/android/
+src-tauri/icons/ios/
+
+# 旧版 Qt 遗留目录的构建产物
 /app/build/
-# 忽略配置user文件
 /app/litelearn.pro.user
+
+# 系统与编辑器文件
+.DS_Store
+Thumbs.db
+*.log

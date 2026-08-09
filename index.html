@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LiteLearn - 代码速查知识库</title>
+    <link rel="stylesheet" href="/src/styles.css" />
+  </head>
+  <body>
+    <div id="app">
+      <!-- 顶部工具栏 -->
+      <header class="toolbar">
+        <label class="toolbar-label" for="stack-select">技术栈:</label>
+        <select id="stack-select" title="选择技术栈"></select>
+        <input
+          id="search-input"
+          type="text"
+          placeholder="搜索中文/英文索引或编号, 输入 000 查看全部"
+          autocomplete="off"
+        />
+        <button id="btn-search" class="btn primary">搜索</button>
+        <span class="spacer"></span>
+        <button id="btn-new-data" class="btn">新增数据</button>
+        <button id="btn-new-stack" class="btn">新建技术栈</button>
+        <button id="btn-export" class="btn">导出备份</button>
+        <button id="btn-import" class="btn">导入备份</button>
+        <button id="btn-sql" class="btn">SQL 控制台</button>
+        <button id="btn-settings" class="btn">设置</button>
+        <button id="btn-theme" class="btn" title="切换深色/浅色模式">🌙 深色</button>
+      </header>
+
+      <!-- 主体区域: 左侧结果列表 + 右侧详情 -->
+      <main class="main">
+        <section class="result-panel">
+          <table id="result-table">
+            <thead>
+              <tr>
+                <th>编号</th>
+                <th>中文索引</th>
+                <th>英文索引</th>
+                <th>更新时间</th>
+              </tr>
+            </thead>
+            <tbody id="result-body"></tbody>
+          </table>
+          <div id="result-empty" class="empty-tip">暂无数据, 请选择技术栈后搜索</div>
+        </section>
+
+        <section class="detail-panel">
+          <div class="detail-header">
+            <h3>代码片段 <span id="code-id" class="snippet-id"></span></h3>
+            <div class="btn-group">
+              <button id="btn-code-copy" class="btn small">复制</button>
+              <button id="btn-code-save" class="btn small primary">保存</button>
+              <button id="btn-code-clear" class="btn small">清空</button>
+            </div>
+          </div>
+          <textarea id="code-edit" class="code-area" spellcheck="false" placeholder="代码片段"></textarea>
+
+          <div class="detail-header">
+            <h3>中文说明</h3>
+            <div class="btn-group">
+              <button id="btn-comment-copy" class="btn small">复制</button>
+              <button id="btn-comment-save" class="btn small primary">保存</button>
+              <button id="btn-comment-clear" class="btn small">清空</button>
+            </div>
+          </div>
+          <textarea id="comment-edit" spellcheck="false" placeholder="中文说明"></textarea>
+
+          <div class="detail-footer">
+            <button id="btn-delete" class="btn danger">删除当前记录</button>
+          </div>
+        </section>
+      </main>
+
+      <!-- 底部状态栏 -->
+      <footer id="statusbar">就绪</footer>
+    </div>
+
+    <!-- 新增数据弹窗 -->
+    <dialog id="new-data-dialog" class="dialog resizable-dialog">
+      <div class="dialog-box">
+        <h3 class="drag-handle" id="new-data-drag">新增数据</h3>
+        <div class="form-row">
+          <label for="new-data-stack">技术栈</label>
+          <select id="new-data-stack"></select>
+        </div>
+        <div class="form-row">
+          <label for="new-data-zh-index">中文索引</label>
+          <input id="new-data-zh-index" type="text" />
+        </div>
+        <div class="form-row">
+          <label for="new-data-en-index">英文索引</label>
+          <input id="new-data-en-index" type="text" />
+        </div>
+        <div class="form-row">
+          <label for="new-data-code">代码片段</label>
+          <textarea id="new-data-code" spellcheck="false"></textarea>
+        </div>
+        <div class="form-row">
+          <label for="new-data-comment">中文说明</label>
+          <textarea id="new-data-comment" spellcheck="false"></textarea>
+        </div>
+        <div class="dialog-buttons">
+          <button id="btn-new-data-save" class="btn primary">保存</button>
+          <button id="btn-new-data-cancel" class="btn">取消</button>
+        </div>
+      </div>
+      <div class="resize-handle" id="new-data-resize-handle"></div>
+    </dialog>
+
+    <!-- 新建技术栈弹窗 -->
+    <dialog id="new-stack-dialog" class="dialog resizable-dialog">
+      <div class="dialog-box">
+        <h3 class="drag-handle">新建技术栈</h3>
+        <div class="form-row">
+          <label for="new-stack-name">技术栈名称</label>
+          <input id="new-stack-name" type="text" placeholder="如 Rust / Go / Docker" />
+        </div>
+        <div class="form-row">
+          <label for="new-stack-description">描述(可选)</label>
+          <input id="new-stack-description" type="text" />
+        </div>
+        <div class="dialog-buttons">
+          <button id="btn-new-stack-save" class="btn primary">确认</button>
+          <button id="btn-new-stack-cancel" class="btn">取消</button>
+        </div>
+      </div>
+      <div class="resize-handle"></div>
+    </dialog>
+
+    <!-- 设置弹窗 -->
+    <dialog id="settings-dialog" class="dialog resizable-dialog">
+      <div class="dialog-box">
+        <h3 class="drag-handle">数据库设置</h3>
+        <div class="form-row">
+          <label for="setting-host">数据库地址</label>
+          <input id="setting-host" type="text" />
+        </div>
+        <div class="form-row">
+          <label for="setting-port">端口</label>
+          <input id="setting-port" type="number" />
+        </div>
+        <div class="form-row">
+          <label for="setting-user">用户名</label>
+          <input id="setting-user" type="text" />
+        </div>
+        <div class="form-row">
+          <label for="setting-password">密码</label>
+          <div class="password-field">
+            <input id="setting-password" type="password" autocomplete="off" />
+            <button
+              id="btn-toggle-password"
+              class="password-eye"
+              type="button"
+              title="显示/隐藏密码"
+            >👁</button>
+          </div>
+        </div>
+        <div class="form-row">
+          <label for="setting-database">数据库名</label>
+          <input id="setting-database" type="text" />
+        </div>
+        <div id="setting-status" class="setting-status"></div>
+        <div class="dialog-buttons">
+          <button id="btn-setting-test" class="btn">测试连接</button>
+          <button id="btn-setting-save" class="btn primary">保存并应用</button>
+          <button id="btn-setting-cancel" class="btn">关闭</button>
+        </div>
+      </div>
+      <div class="resize-handle"></div>
+    </dialog>
+
+    <!-- 导出备份弹窗 -->
+    <dialog id="export-dialog" class="dialog resizable-dialog">
+      <div class="dialog-box">
+        <h3 class="drag-handle">导出备份</h3>
+        <div class="form-row">
+          <label for="export-format">导出格式</label>
+          <select id="export-format">
+            <option value="json">JSON(完整备份)</option>
+            <option value="csv">CSV(表格数据)</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <label for="export-path">保存位置</label>
+          <input id="export-path" type="text" readonly placeholder="点击浏览选择保存位置" />
+          <button id="btn-export-browse" class="btn small">浏览...</button>
+        </div>
+        <div id="export-status" class="setting-status"></div>
+        <div class="dialog-buttons">
+          <button id="btn-export-save" class="btn primary">导出</button>
+          <button id="btn-export-cancel" class="btn">关闭</button>
+        </div>
+      </div>
+      <div class="resize-handle"></div>
+    </dialog>
+
+    <!-- 导入备份弹窗 -->
+    <dialog id="import-dialog" class="dialog resizable-dialog">
+      <div class="dialog-box">
+        <h3 class="drag-handle">导入备份</h3>
+        <div class="form-row">
+          <label for="import-path">备份文件</label>
+          <input id="import-path" type="text" readonly placeholder="点击浏览选择备份文件" />
+          <button id="btn-import-browse" class="btn small">浏览...</button>
+        </div>
+        <div id="import-status" class="setting-status"></div>
+        <div class="dialog-buttons">
+          <button id="btn-import-save" class="btn primary">导入</button>
+          <button id="btn-import-cancel" class="btn">关闭</button>
+        </div>
+      </div>
+      <div class="resize-handle"></div>
+    </dialog>
+
+    <!-- SQL 控制台弹窗 -->
+    <dialog id="sql-dialog" class="dialog resizable-dialog">
+      <div class="dialog-box sql-box">
+        <h3 class="drag-handle">SQL 控制台</h3>
+        <textarea
+          id="sql-input"
+          spellcheck="false"
+          placeholder="输入单条 SQL 语句, 例如: SELECT * FROM snippets LIMIT 10;"
+        ></textarea>
+        <div class="dialog-buttons">
+          <button id="btn-sql-run" class="btn primary">执行</button>
+          <button id="btn-sql-clear" class="btn">清空</button>
+          <button id="btn-sql-close" class="btn">关闭</button>
+        </div>
+        <div id="sql-result" class="sql-result"></div>
+      </div>
+      <div class="resize-handle"></div>
+    </dialog>
+
+    <!-- 确认弹窗 -->
+    <dialog id="confirm-dialog" class="dialog resizable-dialog">
+      <div class="dialog-box confirm-box">
+        <h3 id="confirm-title" class="drag-handle">确认</h3>
+        <p id="confirm-message"></p>
+        <div class="dialog-buttons">
+          <button id="btn-confirm-ok" class="btn primary">确定</button>
+          <button id="btn-confirm-cancel" class="btn">取消</button>
+        </div>
+      </div>
+      <div class="resize-handle"></div>
+    </dialog>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
